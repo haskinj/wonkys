@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Win3.1 HexCalc</title>
+    <style>
+        :root {
+            --win-gray: #c0c0c0;
+            --win-light: #ffffff;
+            --win-dark: #808080;
+            --win-black: #000000;
+            --win-blue: #000080;
+            --hex-width: 100px;
+            --hex-height: 110px;
+            --margin: 4px;
+        }
+
+        body {
+            background-color: var(--win-gray);
+            font-family: "Courier New", Courier, monospace;
+            padding: 20px;
+            margin: 0;
+            overflow: hidden;
+            user-select: none;
+            height: 100vh;
+            width: 100vw;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #window-frame {
+            border-top: 2px solid var(--win-light);
+            border-left: 2px solid var(--win-light);
+            border-right: 2px solid var(--win-black);
+            border-bottom: 2px solid var(--win-black);
+            background: var(--win-gray);
+            width: 95vw;
+            height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.5);
+            position: relative; /* Context fix */
+        }
+
+        #title-bar {
+            background-color: var(--win-blue);
+            color: white;
+            padding: 4px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0; /* Prevent crushing */
+        }
+
+        .title-btn-group { display: flex; gap: 6px; }
+
+        button {
+            background: var(--win-gray);
+            border: 1px solid var(--win-black);
+            box-shadow: inset 1px 1px var(--win-light);
+            font-family: "Courier New", Courier, monospace;
+            font-size: 11px;
+            font-weight: bold;
+            cursor: pointer;
+            padding: 2px 6px;
+        }
+
+        button:active { box-shadow: inset 1px 1px var(--win-black); }
+
+        #controls {
+            padding: 8px;
+            background: var(--win-gray);
+            border-bottom: 1px solid var(--win-dark);
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        #grid-container {
+            flex-grow: 1;
+            padding: 20px;
+            overflow: auto;
+            position: relative;
+            background: #ffffff;
+            border: 2px solid var(--win-dark);
+        }
+
+        .hex-row {
+            display: flex;
+            margin-bottom: -28px;
+            white-space: nowrap; /* Keep them in a line */
+        }
+
+        .hex-row:nth-child(even) { margin-left: 52px; }
+
+        .hex-cell {
+            width: var(--hex-width);
+            height: var(--hex-height);
+            background-color: var(--win-gray);
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            margin-right: var(--margin);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            cursor: text;
+            position: relative;
+            flex-shrink: 0; /* CRITICAL FIX: PREVENT SQUASHING */
+        }
+
+        .hex-cell::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: transparent;
+            z-index: 1;
+            box-shadow: inset 0 0 0 4px var(--win-dark);
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            pointer-events: none;
+        }
+
+        .hex-content {
+            width: 80%;
+            height: 60%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: none;
+            background: transparent;
+            color: black;
+            font-size: 14px;
+            font-weight: bold;
+            outline: none;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+            z-index: 2;
+        }
+
+        .hex-cell:hover { background-color: #dcdcdc; }
+        .hex-cell.active { background-color: #ffff00; }
+        .hex-cell.error { background-color: #ff0000; }
+        .hex-cell.error .hex-content { color: white; }
+    </style>
+</head>
+<body>
+
+<div id="window-frame">
+    <div id="title-bar">
+        <span>HEX-SHEET.EXE</span>
+        <div class="title-btn-group">
+            <button onclick="saveGrid()">[SAVE]</button>
+            <button onclick="document.getElementById('load-btn').click()">[LOAD]</button>
+            <input type="file" id="load-btn" style="display:none" onchange="loadGrid(this)">
+        </div>
+    </div>
+    <div id="controls">
+        STATUS: READY | [CLICK] Edit | [ENTER] Eval (=5+5) | [R-CLICK] Highlight
+    </div>
+    <div id="grid-container">
+        </div>
+</div>
+
+<script>
+    // --- SAFE BOOT LOADER ---
+    window.addEventListener('DOMContentLoaded', (event) => {
+        initGrid();
+    });
+
+    const rows = 12; 
+    const cols = 12; 
+
+    function initGrid() {
+        const grid = document.getElementById('grid-container');
+        if (!grid) return; // Safety check
+        
+        grid.innerHTML = ''; 
+        
+        for (let r = 0; r < rows; r++) {
+            let rowDiv = document.createElement('div');
+            rowDiv.className = 'hex-row';
+            
+            for (let c = 0; c < cols; c++) {
+                let hex = document.createElement('div');
+                hex.className = 'hex-cell';
+                hex.dataset.id = `${r}-${c}`;
+                
+                let content = document.createElement('div');
+                content.className = 'hex-content';
+                content.contentEditable = true;
+                
+                // Bindings
+                content.addEventListener('input', function() { autoResize(this); });
+                content.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter') { e.preventDefault(); this.blur(); }
+                });
+                content.addEventListener('blur', function() { processCell(this); });
+                
+                hex.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                    this.classList.toggle('active');
+                });
+
+                hex.appendChild(content);
+                rowDiv.appendChild(hex);
+            }
+            grid.appendChild(rowDiv);
+        }
+    }
+
+    function autoResize(el) {
+        let fontSize = 14;
+        el.style.fontSize = fontSize + 'px';
+        // Safety break to prevent infinite loops if hidden
+        let safety = 0;
+        while ((el.scrollHeight > el.clientHeight || el.scrollWidth > el.clientWidth) && fontSize > 8 && safety < 20) {
+            fontSize--;
+            el.style.fontSize = fontSize + 'px';
+            safety++;
+        }
+    }
+
+    function processCell(el) {
+        let text = el.innerText.trim();
+        let parent = el.parentElement;
+        parent.classList.remove('error');
+
+        if (text.startsWith('=')) {
+            try {
+                let eq = text.substring(1);
+                if (/[^0-9+\-*/().\s]/.test(eq)) throw new Error("Invalid");
+                let res = eval(eq);
+                el.innerText = res;
+                el.dataset.formula = text;
+                autoResize(el);
+            } catch (err) {
+                parent.classList.add('error');
+            }
+        } else {
+            delete el.dataset.formula;
+        }
+    }
+
+    function saveGrid() {
+        let data = {};
+        document.querySelectorAll('.hex-cell').forEach(hex => {
+            let content = hex.querySelector('.hex-content');
+            let val = content.dataset.formula || content.innerText;
+            let active = hex.classList.contains('active');
+            if ((val && val.trim()) || active) {
+                data[hex.dataset.id] = { val: val, highlight: active };
+            }
+        });
+
+        let blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+        let url = URL.createObjectURL(blob);
+        let a = document.createElement('a');
+        a.href = url;
+        a.download = 'hex-sheet.json';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+    }
+
+    function loadGrid(input) {
+        let file = input.files[0];
+        if (!file) return;
+        let reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                let data = JSON.parse(e.target.result);
+                initGrid(); 
+                for (let [id, props] of Object.entries(data)) {
+                    let hex = document.querySelector(`.hex-cell[data-id="${id}"]`);
+                    if (hex) {
+                        let c = hex.querySelector('.hex-content');
+                        c.innerText = props.val;
+                        if (props.highlight) hex.classList.add('active');
+                        if (props.val.startsWith('=')) processCell(c);
+                        autoResize(c);
+                    }
+                }
+            } catch (err) { alert("File Error"); }
+        };
+        reader.readAsText(file);
+        input.value = ''; // Reset input to allow reloading same file
+    }
+</script>
+
+</body>
+</html>
