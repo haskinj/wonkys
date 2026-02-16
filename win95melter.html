@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows 95 Melting Folders</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none; /* prevent accidental text selection */
+        }
+        body {
+            background: #008080; /* teal – classic 95 desktop */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'MS Sans Serif', 'Segoe UI', 'Arial', sans-serif;
+        }
+        .window {
+            width: 550px;
+            background: #c0c0c0; /* classic gray */
+            border: 3px solid;
+            border-top-color: #dfdfdf;
+            border-left-color: #dfdfdf;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+            padding: 3px;
+        }
+        .title-bar {
+            background: #000080; /* dark blue */
+            color: white;
+            padding: 6px 8px;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 2px solid;
+            border-top-color: #dfdfdf;
+            border-left-color: #dfdfdf;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
+        }
+        .title-bar span {
+            letter-spacing: 0.5px;
+        }
+        .title-bar .buttons {
+            display: flex;
+            gap: 3px;
+        }
+        .title-bar .btn {
+            width: 18px;
+            height: 18px;
+            background: #c0c0c0;
+            border: 2px solid;
+            border-top-color: #dfdfdf;
+            border-left-color: #dfdfdf;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: black;
+            cursor: pointer;
+        }
+        .title-bar .btn:active {
+            border-top-color: #404040;
+            border-left-color: #404040;
+            border-right-color: #dfdfdf;
+            border-bottom-color: #dfdfdf;
+        }
+        .menu-bar {
+            background: #c0c0c0;
+            border: 2px solid;
+            border-top-color: #dfdfdf;
+            border-left-color: #dfdfdf;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
+            padding: 4px 8px;
+            margin-top: 3px;
+            font-size: 13px;
+            display: flex;
+            gap: 16px;
+        }
+        .menu-bar span {
+            cursor: default;
+        }
+        .content {
+            background: #ffffff;
+            border: 2px solid;
+            border-top-color: #404040;
+            border-left-color: #404040;
+            border-right-color: #dfdfdf;
+            border-bottom-color: #dfdfdf;
+            padding: 15px;
+            margin-top: 3px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px 10px;
+            min-height: 250px;
+        }
+        .folder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            cursor: pointer;
+            padding: 5px;
+            transition: background 0.1s;
+        }
+        .folder:active {
+            background: #c0c0c0;
+            outline: 1px dotted black;
+        }
+        .folder-icon {
+            font-size: 48px;
+            line-height: 1;
+            filter: drop-shadow(2px 2px 0 #808080);
+        }
+        .folder-name {
+            font-size: 13px;
+            margin-top: 5px;
+            background: #c0c0c0;
+            padding: 2px 6px;
+            border: 1px solid;
+            border-top-color: #dfdfdf;
+            border-left-color: #dfdfdf;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
+        }
+        /* melting animation */
+        .melting {
+            animation: meltAway 0.6s forwards;
+            pointer-events: none;
+        }
+        @keyframes meltAway {
+            0% {
+                transform: scale(1) rotate(0deg);
+                filter: blur(0px) brightness(1);
+                opacity: 1;
+            }
+            30% {
+                transform: scale(0.9) skew(5deg, 2deg) translateY(5px);
+                filter: blur(2px) brightness(0.9);
+                opacity: 0.9;
+            }
+            70% {
+                transform: scale(0.5) skew(15deg, 8deg) translateY(30px);
+                filter: blur(5px) brightness(0.5);
+                opacity: 0.4;
+            }
+            100% {
+                transform: scale(0.2) skew(20deg, 15deg) translateY(60px);
+                filter: blur(10px) brightness(0);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="window">
+        <!-- Title bar with close button (non-functional, just for looks) -->
+        <div class="title-bar">
+            <span>My Computer</span>
+            <div class="buttons">
+                <div class="btn">_</div>
+                <div class="btn">□</div>
+                <div class="btn">×</div>
+            </div>
+        </div>
+
+        <!-- Fake menu bar -->
+        <div class="menu-bar">
+            <span>File</span>
+            <span>Edit</span>
+            <span>View</span>
+            <span>Help</span>
+        </div>
+
+        <!-- Folder grid -->
+        <div class="content" id="folderGrid">
+            <!-- Folders will be inserted by JavaScript -->
+        </div>
+
+        <!-- Optional status bar (classic 95 has a status bar) -->
+        <div style="background: #c0c0c0; border: 2px solid; border-top-color:#dfdfdf; border-left-color:#dfdfdf; border-right-color:#404040; border-bottom-color:#404040; margin-top:3px; padding:3px 8px; font-size:12px;">
+            <span>JUST TRY YOUR BEST I GUESS? </span>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // List of folders: name and icon (we use the folder emoji for all)
+            const folderData = [
+                { name: 'Documents', icon: '📁' },
+                { name: 'Pictures', icon: '📁' },
+                { name: 'System', icon: '⚙️' },
+                { name: 'Downloads', icon: '📁' },
+                { name: 'Music', icon: '🎵' },
+                { name: 'Videos', icon: '🎬' },
+                { name: 'Work', icon: '📁' },
+                { name: 'Games', icon: '🎮' }
+            ];
+
+            const grid = document.getElementById('folderGrid');
+            grid.innerHTML = ''; // clear any placeholder
+
+            // Create folder elements
+            folderData.forEach(item => {
+                const folderDiv = document.createElement('div');
+                folderDiv.className = 'folder';
+                folderDiv.setAttribute('data-name', item.name);
+
+                // Icon
+                const iconSpan = document.createElement('div');
+                iconSpan.className = 'folder-icon';
+                iconSpan.textContent = item.icon;
+
+                // Name label
+                const nameSpan = document.createElement('div');
+                nameSpan.className = 'folder-name';
+                nameSpan.textContent = item.name;
+
+                folderDiv.appendChild(iconSpan);
+                folderDiv.appendChild(nameSpan);
+
+                // Double-click event
+                folderDiv.addEventListener('dblclick', function(e) {
+                    // Add melting class to this folder
+                    this.classList.add('melting');
+
+                    // Remove the element after animation ends
+                    this.addEventListener('animationend', function() {
+                        this.remove();
+                        // Optional: check if all folders are gone
+                        if (grid.children.length === 0) {
+                            const emptyMsg = document.createElement('div');
+                            emptyMsg.style.gridColumn = 'span 4';
+                            emptyMsg.style.textAlign = 'center';
+                            emptyMsg.style.marginTop = '40px';
+                            emptyMsg.style.fontSize = '16px';
+                            emptyMsg.style.color = '#808080';
+                            emptyMsg.textContent = 'TASK COMPLETE. YOUR ASSISTANCE HAS BEEN NOTED.';
+                            grid.appendChild(emptyMsg);
+                        }
+                    }, { once: true });
+                });
+
+                grid.appendChild(folderDiv);
+            });
+        })();
+    </script>
+</body>
+</html>
