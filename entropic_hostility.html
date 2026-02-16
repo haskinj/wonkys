@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Entropic Atomic Hostility</title>
+<style>
+  @font-face {
+    font-family: 'W95FA';
+    src: url('https://cdn.jsdelivr.net/gh/nicholasgasior/gw-fonts@master/fonts/truetype/fixedsys-excelsior/FSEX300.ttf') format('truetype');
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: #008080;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    font-family: 'W95FA', 'Pixelated MS Sans Serif', 'Microsoft Sans Serif', 'Tahoma', 'Arial', sans-serif;
+    overflow: hidden;
+  }
+
+  /* ── WIN95 WINDOW FRAME ── */
+  .window {
+    width: 460px;
+    background: #C0C0C0;
+    border-top: 2px solid #FFFFFF;
+    border-left: 2px solid #FFFFFF;
+    border-right: 2px solid #404040;
+    border-bottom: 2px solid #404040;
+    box-shadow: inset 1px 1px 0 #DFDFDF, inset -1px -1px 0 #808080;
+    position: relative;
+    user-select: none;
+  }
+
+  /* ── TITLE BAR ── */
+  .titlebar {
+    background: linear-gradient(90deg, #000080, #1084d0);
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 3px;
+    margin: 2px 2px 0 2px;
+  }
+
+  .titlebar-text {
+    color: #FFFFFF;
+    font-size: 12px;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+    padding-left: 4px;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.3);
+  }
+
+  .titlebar-icon {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    color: #FFFF00;
+    margin-right: 4px;
+  }
+
+  .titlebar-left {
+    display: flex;
+    align-items: center;
+  }
+
+  /* ── WINDOW BUTTONS ── */
+  .titlebar-buttons {
+    display: flex;
+    gap: 2px;
+  }
+
+  .win-btn {
+    width: 18px;
+    height: 16px;
+    background: #C0C0C0;
+    border-top: 1px solid #FFFFFF;
+    border-left: 1px solid #FFFFFF;
+    border-right: 1px solid #404040;
+    border-bottom: 1px solid #404040;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    color: #000;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .win-btn:active {
+    border-top: 1px solid #404040;
+    border-left: 1px solid #404040;
+    border-right: 1px solid #FFFFFF;
+    border-bottom: 1px solid #FFFFFF;
+  }
+
+  /* ── MENU BAR ── */
+  .menubar {
+    display: flex;
+    gap: 0;
+    padding: 2px 4px;
+    margin: 0 2px;
+    font-size: 11px;
+  }
+
+  .menu-item {
+    padding: 2px 8px;
+    color: #000;
+    cursor: pointer;
+  }
+
+  .menu-item:hover {
+    background: #000080;
+    color: #FFF;
+  }
+
+  .menu-item .underline {
+    text-decoration: underline;
+  }
+
+  /* ── CONTENT AREA ── */
+  .content {
+    padding: 8px 8px 10px 8px;
+    margin: 0 2px 2px 2px;
+  }
+
+  /* ── SEISMOGRAPH GROUP BOX ── */
+  .groupbox {
+    border: 1px solid #808080;
+    border-right-color: #FFFFFF;
+    border-bottom-color: #FFFFFF;
+    padding: 14px 8px 8px 8px;
+    position: relative;
+    margin-bottom: 10px;
+  }
+
+  .groupbox::after {
+    content: '';
+    position: absolute;
+    top: -1px;
+    left: -1px;
+    right: -1px;
+    bottom: -1px;
+    border: 1px solid transparent;
+    border-right-color: #DFDFDF;
+    border-bottom-color: #DFDFDF;
+    pointer-events: none;
+  }
+
+  .groupbox-label {
+    position: absolute;
+    top: -8px;
+    left: 10px;
+    background: #C0C0C0;
+    padding: 0 6px;
+    font-size: 11px;
+    font-weight: bold;
+    color: #000;
+  }
+
+  /* ── SEISMOGRAPH DISPLAY ── */
+  .seismo-panel {
+    background: #000;
+    border-top: 2px solid #404040;
+    border-left: 2px solid #404040;
+    border-right: 2px solid #FFFFFF;
+    border-bottom: 2px solid #FFFFFF;
+    height: 200px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ── GRIDLINES OVERLAY ── */
+  .seismo-panel::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0,80,0,0.25) 39px, rgba(0,80,0,0.25) 40px),
+      repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(0,80,0,0.25) 39px, rgba(0,80,0,0.25) 40px);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  /* ── CONTROLS ROW ── */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  /* ── WIN95 BUTTON ── */
+  .btn95 {
+    height: 28px;
+    padding: 0 16px;
+    background: #C0C0C0;
+    border-top: 2px solid #FFFFFF;
+    border-left: 2px solid #FFFFFF;
+    border-right: 2px solid #404040;
+    border-bottom: 2px solid #404040;
+    box-shadow: inset -1px -1px 0 #808080, inset 1px 1px 0 #DFDFDF;
+    font-family: inherit;
+    font-size: 11px;
+    color: #000;
+    cursor: pointer;
+    white-space: nowrap;
+    outline: none;
+    position: relative;
+  }
+
+  .btn95:active {
+    border-top: 2px solid #404040;
+    border-left: 2px solid #404040;
+    border-right: 2px solid #FFFFFF;
+    border-bottom: 2px solid #FFFFFF;
+    box-shadow: inset 1px 1px 0 #808080, inset -1px -1px 0 #DFDFDF;
+    padding-top: 1px;
+    padding-left: 17px;
+  }
+
+  .btn95:focus {
+    outline: 1px dotted #000;
+    outline-offset: -4px;
+  }
+
+  /* ── WIN95 TEXT INPUT ── */
+  .textbox95 {
+    flex: 1;
+    height: 28px;
+    background: #FFFFFF;
+    border-top: 2px solid #404040;
+    border-left: 2px solid #404040;
+    border-right: 2px solid #FFFFFF;
+    border-bottom: 2px solid #FFFFFF;
+    box-shadow: inset 1px 1px 0 #808080;
+    font-family: inherit;
+    font-size: 11px;
+    color: #000;
+    padding: 0 4px;
+    outline: none;
+  }
+
+  /* ── STATUS BAR ── */
+  .statusbar {
+    display: flex;
+    margin: 0 2px 2px 2px;
+    height: 20px;
+  }
+
+  .status-cell {
+    background: #C0C0C0;
+    border-top: 1px solid #808080;
+    border-left: 1px solid #808080;
+    border-right: 1px solid #FFFFFF;
+    border-bottom: 1px solid #FFFFFF;
+    padding: 2px 6px;
+    font-size: 10px;
+    color: #000;
+    display: flex;
+    align-items: center;
+  }
+
+  .status-cell:first-child {
+    flex: 1;
+  }
+
+  .status-cell:last-child {
+    width: 120px;
+  }
+
+  /* ── SCANLINE EFFECT ── */
+  .scanlines {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 9999;
+  }
+</style>
+</head>
+<body>
+
+<div class="scanlines"></div>
+
+<div class="window">
+  <!-- Title Bar -->
+  <div class="titlebar">
+    <div class="titlebar-left">
+      <div class="titlebar-icon">☢</div>
+      <span class="titlebar-text">Entropic Atomic Hostility</span>
+    </div>
+    <div class="titlebar-buttons">
+      <div class="win-btn">_</div>
+      <div class="win-btn">□</div>
+      <div class="win-btn" id="closeBtn">×</div>
+    </div>
+  </div>
+
+  <!-- Menu Bar -->
+  <div class="menubar">
+    <div class="menu-item"><span class="underline">F</span>ile</div>
+    <div class="menu-item"><span class="underline">V</span>iew</div>
+    <div class="menu-item"><span class="underline">H</span>elp</div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+    <!-- Seismograph Group Box -->
+    <div class="groupbox">
+      <span class="groupbox-label">Seismograph Output</span>
+      <div class="seismo-panel">
+        <canvas id="seismo"></canvas>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <button class="btn95" id="getValueBtn">Get Value</button>
+      <input type="text" class="textbox95" id="output" readonly>
+    </div>
+  </div>
+
+  <!-- Status Bar -->
+  <div class="statusbar">
+    <div class="status-cell" id="statusText">Ready</div>
+    <div class="status-cell" id="statusReading">Level: 0.00</div>
+  </div>
+</div>
+
+<script>
+// ── SEISMOGRAPH ENGINE ──
+const canvas = document.getElementById('seismo');
+const ctx = canvas.getContext('2d');
+const points = [];
+const MAX_POINTS = 200;
+let animFrame;
+
+// Fill initial points at center
+for (let i = 0; i < MAX_POINTS; i++) {
+  points.push(0.5);
+}
+
+function resizeCanvas() {
+  canvas.width = canvas.offsetWidth * 2;
+  canvas.height = canvas.offsetHeight * 2;
+  ctx.scale(2, 2);
+}
+resizeCanvas();
+
+// Entropic hostility: seismic noise with occasional spikes
+let volatility = 0.03;
+let spikeTimer = 0;
+
+function nextPoint() {
+  const last = points[points.length - 1];
+  
+  // Random spike events
+  spikeTimer--;
+  if (spikeTimer <= 0 && Math.random() < 0.008) {
+    volatility = 0.15 + Math.random() * 0.2;
+    spikeTimer = 10 + Math.floor(Math.random() * 30);
+  }
+  
+  // Decay volatility back to baseline
+  volatility = volatility * 0.97 + 0.03 * 0.03;
+  
+  // Generate next value with mean reversion
+  const drift = (0.5 - last) * 0.02;
+  const noise = (Math.random() - 0.5) * volatility;
+  const next = Math.max(0.05, Math.min(0.95, last + drift + noise));
+  
+  return next;
+}
+
+function drawSeismo() {
+  const w = canvas.offsetWidth;
+  const h = canvas.offsetHeight;
+  
+  // Push new point
+  points.push(nextPoint());
+  if (points.length > MAX_POINTS) points.shift();
+  
+  // Clear
+  ctx.clearRect(0, 0, w, h);
+  
+  // Draw trace with glow
+  ctx.shadowColor = '#00FF00';
+  ctx.shadowBlur = 4;
+  ctx.strokeStyle = '#00FF00';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  
+  for (let i = 0; i < points.length; i++) {
+    const x = (i / (MAX_POINTS - 1)) * w;
+    const y = (1 - points[i]) * h;
+    if (i === 0) {
+      ctx.moveTo(x, y);
+    } else {
+      ctx.lineTo(x, y);
+    }
+  }
+  ctx.stroke();
+  
+  // Dimmer afterglow trace
+  ctx.shadowBlur = 12;
+  ctx.strokeStyle = 'rgba(0, 255, 0, 0.15)';
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  for (let i = 0; i < points.length; i++) {
+    const x = (i / (MAX_POINTS - 1)) * w;
+    const y = (1 - points[i]) * h;
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+  ctx.stroke();
+  
+  ctx.shadowBlur = 0;
+  
+  // Centerline
+  ctx.strokeStyle = 'rgba(0, 255, 0, 0.12)';
+  ctx.lineWidth = 0.5;
+  ctx.setLineDash([4, 8]);
+  ctx.beginPath();
+  ctx.moveTo(0, h / 2);
+  ctx.lineTo(w, h / 2);
+  ctx.stroke();
+  ctx.setLineDash([]);
+  
+  // Update status bar reading
+  const current = points[points.length - 1];
+  const hostility = ((current - 0.5) * 200).toFixed(2);
+  document.getElementById('statusReading').textContent = 
+    'Level: ' + (hostility >= 0 ? '+' : '') + hostility;
+  
+  animFrame = requestAnimationFrame(drawSeismo);
+}
+
+drawSeismo();
+
+// ── BUTTON LOGIC ──
+const btn = document.getElementById('getValueBtn');
+const output = document.getElementById('output');
+const statusText = document.getElementById('statusText');
+
+btn.addEventListener('click', function() {
+  output.value = 'help help help help help help help help help';
+  statusText.textContent = 'Value retrieved. Hostility persists.';
+  
+  // Trigger a spike when button is pressed
+  volatility = 0.25;
+  spikeTimer = 40;
+});
+
+// ── CLOSE BUTTON ──
+document.getElementById('closeBtn').addEventListener('click', function() {
+  document.querySelector('.window').style.display = 'none';
+  document.body.style.background = '#000';
+  
+  // After a moment, show BSOD
+  setTimeout(() => {
+    document.body.innerHTML = `
+      <div style="
+        background: #000080;
+        color: #FFFFFF;
+        font-family: 'Courier New', monospace;
+        font-size: 14px;
+        padding: 40px;
+        width: 100%;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+      ">
+        <p style="text-align:center; background:#C0C0C0; color:#000080; display:inline-block; padding:2px 12px; margin:0 auto 24px; font-weight:bold;">&nbsp;Entropic Atomic Hostility&nbsp;</p>
+        <br>
+        <p>An error has occurred. The hostility is permanent.</p>
+        <br>
+        <p>*  Press any key to continue requesting help.</p>
+        <p>*  Press CTRL+ALT+DEL to restart the hostility.</p>
+        <br><br>
+        <p>Press any key to continue _</p>
+      </div>`;
+    document.body.addEventListener('keydown', () => location.reload());
+    document.body.addEventListener('click', () => location.reload());
+  }, 500);
+});
+</script>
+</body>
+</html>
