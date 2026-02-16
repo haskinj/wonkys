@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows 95 Magnetic Repulsion (Stronger)</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            user-select: none;
+        }
+        body {
+            background: #008080;
+            margin: 0;
+            padding: 0;
+            font-family: 'MS Sans Serif', 'Segoe UI', 'Arial', sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        #window {
+            position: absolute;
+            width: 550px;
+            background: #c0c0c0;
+            border: 3px solid;
+            border-top-color: #dfdfdf;
+            border-left-color: #dfdfdf;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+            padding: 3px;
+            top: 50px;
+            left: 50px;
+            transition: transform 0.1s ease-out;
+            will-change: transform;
+        }
+        .title-bar {
+            background: #000080;
+            color: white;
+            padding: 6px 8px;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 2px solid;
+            border-top-color: #dfdfdf;
+            border-left-color: #dfdfdf;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
+        }
+        .title-bar .buttons {
+            display: flex;
+            gap: 3px;
+        }
+        .title-bar .btn {
+            width: 18px;
+            height: 18px;
+            background: #c0c0c0;
+            border: 2px solid;
+            border-top-color: #dfdfdf;
+            border-left-color: #dfdfdf;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
+            font-size: 12px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: black;
+            cursor: default;
+        }
+        .menu-bar {
+            background: #c0c0c0;
+            border: 2px solid;
+            border-top-color: #dfdfdf;
+            border-left-color: #dfdfdf;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
+            padding: 4px 8px;
+            margin-top: 3px;
+            font-size: 13px;
+            display: flex;
+            gap: 16px;
+        }
+        .menu-bar span {
+            cursor: default;
+        }
+        .content {
+            background: #ffffff;
+            border: 2px solid;
+            border-top-color: #404040;
+            border-left-color: #404040;
+            border-right-color: #dfdfdf;
+            border-bottom-color: #dfdfdf;
+            padding: 15px;
+            margin-top: 3px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px 10px;
+            min-height: 250px;
+        }
+        .folder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 5px;
+            cursor: default;
+        }
+        .folder-icon {
+            font-size: 48px;
+            line-height: 1;
+            filter: drop-shadow(2px 2px 0 #808080);
+        }
+        .folder-name {
+            font-size: 13px;
+            margin-top: 5px;
+            background: #c0c0c0;
+            padding: 2px 6px;
+            border: 1px solid;
+            border-top-color: #dfdfdf;
+            border-left-color: #dfdfdf;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
+        }
+        .status-bar {
+            background: #c0c0c0;
+            border: 2px solid;
+            border-top-color: #dfdfdf;
+            border-left-color: #dfdfdf;
+            border-right-color: #404040;
+            border-bottom-color: #404040;
+            margin-top: 3px;
+            padding: 3px 8px;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div id="window">
+        <div class="title-bar">
+            <span>My Computer</span>
+            <div class="buttons">
+                <div class="btn">_</div>
+                <div class="btn">□</div>
+                <div class="btn">×</div>
+            </div>
+        </div>
+        <div class="menu-bar">
+            <span>File</span>
+            <span>Edit</span>
+            <span>View</span>
+            <span>Help</span>
+        </div>
+        <div class="content" id="folderGrid"></div>
+        <div class="status-bar">
+            <span>8 object(s)</span>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            const folderData = [
+                { name: 'Documents', icon: '📁' },
+                { name: 'Pictures', icon: '📁' },
+                { name: 'System', icon: '⚙️' },
+                { name: 'Downloads', icon: '📁' },
+                { name: 'Music', icon: '🎵' },
+                { name: 'Videos', icon: '🎬' },
+                { name: 'Work', icon: '📁' },
+                { name: 'Games', icon: '🎮' }
+            ];
+
+            const grid = document.getElementById('folderGrid');
+            folderData.forEach(item => {
+                const folderDiv = document.createElement('div');
+                folderDiv.className = 'folder';
+                const iconSpan = document.createElement('div');
+                iconSpan.className = 'folder-icon';
+                iconSpan.textContent = item.icon;
+                const nameSpan = document.createElement('div');
+                nameSpan.className = 'folder-name';
+                nameSpan.textContent = item.name;
+                folderDiv.appendChild(iconSpan);
+                folderDiv.appendChild(nameSpan);
+                grid.appendChild(folderDiv);
+            });
+
+            // ---- Magnetic repulsion logic (stronger) ----
+            const win = document.getElementById('window');
+            let mouseX = 0, mouseY = 0;
+            let targetX = 50, targetY = 50;
+
+            document.addEventListener('mousemove', (e) => {
+                mouseX = e.clientX;
+                mouseY = e.clientY;
+            });
+
+            function updatePosition() {
+                const rect = win.getBoundingClientRect();
+                const winCenterX = rect.left + rect.width / 2;
+                const winCenterY = rect.top + rect.height / 2;
+
+                const dx = mouseX - winCenterX;
+                const dy = mouseY - winCenterY;
+                const dist = Math.sqrt(dx*dx + dy*dy);
+
+                const repulsionRadius = 250; // slightly larger radius
+                let force = 0;
+                if (dist < repulsionRadius && dist > 0) {
+                    // Increased multiplier from 30 to 80 for stronger push
+                    force = (repulsionRadius - dist) / repulsionRadius * 80;
+                }
+
+                let moveX = 0, moveY = 0;
+                if (dist > 0) {
+                    moveX = (winCenterX - mouseX) / dist * force;
+                    moveY = (winCenterY - mouseY) / dist * force;
+                }
+
+                targetX += moveX;
+                targetY += moveY;
+
+                const viewportW = window.innerWidth;
+                const viewportH = window.innerHeight;
+                const winW = rect.width;
+                const winH = rect.height;
+                targetX = Math.max(0, Math.min(viewportW - winW, targetX));
+                targetY = Math.max(0, Math.min(viewportH - winH, targetY));
+
+                win.style.transform = `translate(${targetX}px, ${targetY}px)`;
+
+                requestAnimationFrame(updatePosition);
+            }
+
+            updatePosition();
+        })();
+    </script>
+</body>
+</html>
