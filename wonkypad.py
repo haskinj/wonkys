@@ -46,7 +46,7 @@ WIN95_COLORS = {
     'menu_bg': '#C0C0C0',
     'menu_fg': '#000000',
     'status_bg': '#C0C0C0',
-    'indent_guide': '#E8E8E8',
+    'indent_guide': '#C2C2C2',
     'selection_bg': '#000080',
     'selection_fg': '#FFFFFF',
 }
