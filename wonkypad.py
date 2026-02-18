@@ -4,7 +4,6 @@ WonkyPad v1.0
 A text editor that looks like Windows 95 and respects the user.
 
 Features:
-  - Ghost indent guides for Python and HTML
   - Auto-closing brackets, parens, quotes
   - Syntax highlighting for Python and HTML
   - Right-click menu with normal stuff AND:
