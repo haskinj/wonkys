@@ -5,7 +5,7 @@ A small, self-contained piece of code that:
 - Serves no practical purpose
 - Brings disproportionate joy
 - Exists primarily because it *can*
-- May be written in COBOL, Brainfuck, or any other language 
+- May be written in COBOL, Fortran, FrogPond or any other language 
   that was never meant for such frivolity
 - Often involves neon static, floppy disks, or surgical checklists
 - Cannot be explained adequately without a 10-minute preamble
