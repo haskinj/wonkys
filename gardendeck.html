@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<title>GardenDeck</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1a1a18;
+    --bg-warm: #1e1d1a;
+    --card-bg: #2a2922;
+    --card-border: #8b7d5e;
+    --card-border-glow: rgba(180, 160, 100, 0.3);
+    --gold: #c9a84c;
+    --gold-dim: rgba(201, 168, 76, 0.15);
+    --gold-glow: rgba(201, 168, 76, 0.08);
+    --green: #5a8a3c;
+    --green-light: #7ab556;
+    --green-dim: rgba(90, 138, 60, 0.15);
+    --red-warn: #c45a4a;
+    --blue-info: #4a8ab5;
+    --text: #e8e0d0;
+    --text-dim: #8a8272;
+    --text-muted: #5a5548;
+    --input-bg: rgba(255, 255, 255, 0.06);
+    --input-border: rgba(255, 255, 255, 0.1);
+    --serif: 'Cinzel', 'Palatino', serif;
+    --body: 'Crimson Pro', 'Georgia', serif;
+    --mono: 'JetBrains Mono', monospace;
+    --card-width: min(340px, 90vw);
+    --card-ratio: 1.4;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--body);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ── HEADER ── */
+  .app-header {
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    background: rgba(26, 26, 24, 0.95);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    backdrop-filter: blur(12px);
+  }
+
+  .app-title {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 2px;
+  }
+
+  .app-title span {
+    color: var(--green-light);
+  }
+
+  .header-actions {
+    display: flex;
+    gap: 8px;
+  }
+
+  .header-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 8px 14px;
+    border: 1px solid var(--input-border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 2px;
+  }
+
+  .header-btn:hover, .header-btn.active {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: var(--gold-dim);
+  }
+
+  .header-btn.add-btn {
+    border-color: var(--green);
+    color: var(--green-light);
+  }
+
+  .header-btn.add-btn:hover {
+    background: var(--green-dim);
+  }
+
+  /* ── VIEWS ── */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* ── DECK VIEW ── */
+  .deck-view {
+    padding: 20px;
+  }
+
+  .deck-stats {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .deck-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+  }
+
+  .deck-empty {
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--text-muted);
+    font-style: italic;
+    font-size: 16px;
+  }
+
+  .deck-empty .empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+  }
+
+  /* ── MINI CARD (deck grid) ── */
+  .mini-card {
+    background: var(--card-bg);
+    border: 1px solid rgba(139, 125, 94, 0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: all 0.3s;
+    position: relative;
+  }
+
+  .mini-card:hover {
+    border-color: var(--card-border);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+  }
+
+  .mini-card-img {
+    width: 100%;
+    aspect-ratio: 1.2;
+    object-fit: cover;
+    background: rgba(255,255,255,0.03);
+    display: block;
+  }
+
+  .mini-card-img.placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    opacity: 0.2;
+    aspect-ratio: 1.2;
+  }
+
+  .mini-card-info {
+    padding: 8px 10px;
+  }
+
+  .mini-card-name {
+    font-family: var(--serif);
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mini-card-sci {
+    font-family: var(--body);
+    font-size: 10px;
+    font-style: italic;
+    color: var(--text-dim);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .mini-card-harvest {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--green-light);
+    margin-top: 4px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── FULL CARD VIEW ── */
+  .card-detail-view {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    min-height: calc(100vh - 60px);
+  }
+
+  .mtg-card {
+    width: var(--card-width);
+    background: var(--card-bg);
+    border: 3px solid var(--card-border);
+    border-radius: 12px;
+    padding: 10px;
+    position: relative;
+    box-shadow:
+      0 0 0 1px rgba(0,0,0,0.5),
+      0 2px 8px rgba(0,0,0,0.3),
+      0 8px 32px rgba(0,0,0,0.2),
+      inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  .mtg-card::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border: 1px solid rgba(139, 125, 94, 0.2);
+    border-radius: 8px;
+    pointer-events: none;
+  }
+
+  /* Card header */
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 10px;
+    background: linear-gradient(135deg, rgba(90,138,60,0.2), rgba(90,138,60,0.05));
+    border: 1px solid rgba(90,138,60,0.2);
+    border-radius: 4px;
+    margin-bottom: 6px;
+  }
+
+  .card-name {
+    font-family: var(--serif);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text);
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-cost {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--green-light);
+    flex-shrink: 0;
+    margin-left: 8px;
+    background: rgba(90,138,60,0.2);
+    padding: 2px 6px;
+    border-radius: 10px;
+    border: 1px solid rgba(90,138,60,0.3);
+  }
+
+  /* Card image */
+  .card-image-frame {
+    border: 1px solid rgba(139, 125, 94, 0.3);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 6px;
+    background: #111;
+    aspect-ratio: 1.5;
+    position: relative;
+  }
+
+  .card-image-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .card-image-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-muted);
+    font-size: 14px;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .card-image-placeholder span {
+    font-size: 40px;
+    opacity: 0.3;
+  }
+
+  /* Type line */
+  .card-type-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 10px;
+    background: linear-gradient(135deg, rgba(90,138,60,0.15), rgba(90,138,60,0.03));
+    border: 1px solid rgba(90,138,60,0.15);
+    border-radius: 3px;
+    margin-bottom: 6px;
+    min-height: 26px;
+  }
+
+  .card-scientific {
+    font-family: var(--body);
+    font-size: 12px;
+    font-style: italic;
+    color: var(--text-dim);
+    flex: 1;
+  }
+
+  .card-type-badge {
+    font-family: var(--mono);
+    font-size: 9px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 2px 6px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .badge-perennial {
+    color: var(--green-light);
+    background: var(--green-dim);
+    border: 1px solid rgba(90,138,60,0.3);
+  }
+
+  .badge-annual {
+    color: var(--gold);
+    background: var(--gold-dim);
+    border: 1px solid rgba(201,168,76,0.3);
+  }
+
+  /* Rules box */
+  .card-rules {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 3px;
+    padding: 10px;
+    margin-bottom: 6px;
+    min-height: 80px;
+  }
+
+  .card-dates {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+
+  .card-date-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .card-date-label {
+    font-family: var(--mono);
+    font-size: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+  }
+
+  .card-date-value {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text);
+  }
+
+  .card-date-value.harvest {
+    color: var(--green-light);
+  }
+
+  .card-notes {
+    font-family: var(--body);
+    font-size: 13px;
+    color: var(--text-dim);
+    line-height: 1.6;
+    font-style: italic;
+    border-top: 1px solid rgba(255,255,255,0.04);
+    padding-top: 8px;
+    margin-top: 8px;
+  }
+
+  .card-notes:empty { display: none; }
+
+  /* Watch out section */
+  .card-warnings {
+    background: rgba(196, 90, 74, 0.06);
+    border: 1px solid rgba(196, 90, 74, 0.15);
+    border-radius: 3px;
+    padding: 8px 10px;
+    margin-bottom: 6px;
+  }
+
+  .card-warnings-title {
+    font-family: var(--serif);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    color: var(--red-warn);
+    margin-bottom: 4px;
+  }
+
+  .card-warnings-text {
+    font-family: var(--body);
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* Card footer */
+  .card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 10px;
+    background: linear-gradient(135deg, rgba(90,138,60,0.1), rgba(90,138,60,0.02));
+    border: 1px solid rgba(90,138,60,0.1);
+    border-radius: 3px;
+  }
+
+  .card-source, .card-price {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+
+  .card-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 16px;
+    width: 100%;
+    max-width: var(--card-width);
+  }
+
+  .card-action-btn {
+    flex: 1;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 10px;
+    border: 1px solid var(--input-border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 2px;
+    text-align: center;
+  }
+
+  .card-action-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  .card-action-btn.delete-btn:hover {
+    border-color: var(--red-warn);
+    color: var(--red-warn);
+  }
+
+  /* ── CREATE VIEW ── */
+  .create-view {
+    padding: 20px;
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .create-title {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gold);
+    margin-bottom: 20px;
+    text-align: center;
+    letter-spacing: 2px;
+  }
+
+  .form-group {
+    margin-bottom: 16px;
+  }
+
+  .form-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+    display: block;
+  }
+
+  .form-input, .form-textarea, .form-select {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--input-bg);
+    border: 1px solid var(--input-border);
+    border-radius: 3px;
+    color: var(--text);
+    font-family: var(--body);
+    font-size: 15px;
+    transition: border-color 0.2s;
+    outline: none;
+  }
+
+  .form-input:focus, .form-textarea:focus, .form-select:focus {
+    border-color: var(--green);
+  }
+
+  .form-input::placeholder, .form-textarea::placeholder {
+    color: var(--text-muted);
+  }
+
+  .form-textarea {
+    min-height: 80px;
+    resize: vertical;
+    line-height: 1.5;
+  }
+
+  .form-select {
+    appearance: none;
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M6 8L0 0h12z' fill='%235a5548'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+  }
+
+  .form-select option {
+    background: var(--bg);
+    color: var(--text);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .form-hint {
+    font-family: var(--mono);
+    font-size: 9px;
+    color: var(--text-muted);
+    margin-top: 4px;
+  }
+
+  .auto-populated {
+    border-color: rgba(90, 138, 60, 0.3) !important;
+    background: rgba(90, 138, 60, 0.06) !important;
+  }
+
+  .lookup-btn {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 10px 16px;
+    border: 1px solid var(--green);
+    background: var(--green-dim);
+    color: var(--green-light);
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 2px;
+    width: 100%;
+    margin-top: 4px;
+  }
+
+  .lookup-btn:hover {
+    background: rgba(90,138,60,0.25);
+  }
+
+  .lookup-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .lookup-btn.loading {
+    position: relative;
+    color: transparent;
+  }
+
+  .lookup-btn.loading::after {
+    content: 'Searching...';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--green-light);
+    animation: pulse 1s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .photo-upload {
+    width: 100%;
+    aspect-ratio: 1.5;
+    border: 2px dashed rgba(255,255,255,0.1);
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    overflow: hidden;
+    background: rgba(255,255,255,0.02);
+    position: relative;
+  }
+
+  .photo-upload:hover {
+    border-color: var(--green);
+    background: var(--green-dim);
+  }
+
+  .photo-upload img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    position: absolute;
+    inset: 0;
+  }
+
+  .photo-upload-text {
+    color: var(--text-muted);
+    font-size: 13px;
+    text-align: center;
+  }
+
+  .photo-upload-text span {
+    display: block;
+    font-size: 32px;
+    margin-bottom: 8px;
+    opacity: 0.3;
+  }
+
+  .form-submit {
+    font-family: var(--serif);
+    font-size: 14px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 14px;
+    border: 2px solid var(--green);
+    background: var(--green-dim);
+    color: var(--green-light);
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 3px;
+    width: 100%;
+    margin-top: 8px;
+    font-weight: 600;
+  }
+
+  .form-submit:hover {
+    background: rgba(90,138,60,0.3);
+    box-shadow: 0 0 20px rgba(90,138,60,0.2);
+  }
+
+  .form-cancel {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 10px;
+    border: 1px solid var(--input-border);
+    background: transparent;
+    color: var(--text-dim);
+    cursor: pointer;
+    transition: all 0.2s;
+    border-radius: 2px;
+    width: 100%;
+    margin-top: 8px;
+    text-align: center;
+  }
+
+  .form-cancel:hover {
+    border-color: var(--red-warn);
+    color: var(--red-warn);
+  }
+
+  /* ── EXPORT OVERLAY ── */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: var(--card-bg);
+    border: 1px solid var(--green);
+    padding: 12px 24px;
+    border-radius: 4px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--green-light);
+    z-index: 200;
+    transition: transform 0.3s ease;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+  }
+
+  .toast.show {
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 400px) {
+    .deck-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .app-title { font-size: 15px; }
+    .header-btn { padding: 6px 10px; font-size: 9px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app-header">
+  <div class="app-title">Garden<span>Deck</span></div>
+  <div class="header-actions">
+    <button class="header-btn" id="exportBtn" title="Export CSV">CSV</button>
+    <button class="header-btn active" id="deckViewBtn">Deck</button>
+    <button class="header-btn add-btn" id="addCardBtn">+ New</button>
+  </div>
+</div>
+
+<!-- ═══ DECK VIEW ═══ -->
+<div id="deckView" class="view active deck-view">
+  <div class="deck-stats" id="deckStats">0 plants in garden</div>
+  <div class="deck-grid" id="deckGrid"></div>
+  <div class="deck-empty" id="deckEmpty">
+    <div class="empty-icon">🌱</div>
+    <div>Your garden is empty.<br>Tap + New to plant your first card.</div>
+  </div>
+</div>
+
+<!-- ═══ CARD DETAIL VIEW ═══ -->
+<div id="cardDetailView" class="view card-detail-view"></div>
+
+<!-- ═══ CREATE VIEW ═══ -->
+<div id="createView" class="view create-view">
+  <div class="create-title">Plant a New Card</div>
+  
+  <div class="form-group">
+    <label class="form-label">Plant Name</label>
+    <input type="text" class="form-input" id="plantName" placeholder="e.g. Roma Tomato">
+  </div>
+
+  <div class="form-group">
+    <button class="lookup-btn" id="lookupBtn">🔍 Auto-Populate Plant Data</button>
+    <div class="form-hint" id="lookupHint">Enter a plant name first, then search</div>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Photo</label>
+    <div class="photo-upload" id="photoUpload">
+      <div class="photo-upload-text" id="photoUploadText">
+        <span>📷</span>
+        Tap to add photo
+      </div>
+    </div>
+    <input type="file" id="photoInput" accept="image/*" capture="environment" style="display:none">
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Scientific Name</label>
+    <input type="text" class="form-input" id="sciName" placeholder="Auto-populated">
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Type</label>
+    <select class="form-select" id="plantType">
+      <option value="">Select...</option>
+      <option value="annual">Annual</option>
+      <option value="perennial">Perennial</option>
+      <option value="biennial">Biennial</option>
+    </select>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">Date Planted</label>
+      <input type="date" class="form-input" id="datePlanted">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Est. Harvest</label>
+      <input type="date" class="form-input auto-populated" id="estHarvest" placeholder="Auto">
+    </div>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Days to Harvest</label>
+    <input type="number" class="form-input" id="daysToHarvest" placeholder="Auto-populated (e.g. 75)">
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Description / Notes</label>
+    <textarea class="form-textarea" id="plantNotes" placeholder="Growing notes, observations..."></textarea>
+  </div>
+
+  <div class="form-group">
+    <label class="form-label">Watch Out For These</label>
+    <textarea class="form-textarea" id="plantWarnings" placeholder="Common problems, pests (auto-populated)"></textarea>
+  </div>
+
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">Where From</label>
+      <input type="text" class="form-input" id="plantSource" placeholder="Nursery, seed co...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Price Paid</label>
+      <input type="text" class="form-input" id="plantPrice" placeholder="$0.00">
+    </div>
+  </div>
+
+  <button class="form-submit" id="saveCardBtn">Add to Garden</button>
+  <button class="form-cancel" id="cancelBtn">Cancel</button>
+</div>
+
+<!-- Toast notification -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ══════════════════════════════════════════
+//  GARDENDECK — STATE & STORAGE
+// ══════════════════════════════════════════
+
+const STORAGE_KEY = 'gardendeck_plants';
+
+function loadDeck() {
+  try {
+    const data = localStorage.getItem(STORAGE_KEY);
+    return data ? JSON.parse(data) : [];
+  } catch { return []; }
+}
+
+function saveDeck(deck) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(deck));
+}
+
+let deck = loadDeck();
+let currentCardId = null;
+let currentPhoto = null;
+let editingId = null;
+
+// ══════════════════════════════════════════
+//  PLANT DATA LOOKUP
+// ══════════════════════════════════════════
+
+const PLANT_DATABASE = {
+  // Common vegetables
+  'tomato': { sci: 'Solanum lycopersicum', type: 'annual', days: 75, warnings: 'Tomato hornworms, blossom end rot (calcium deficiency), early blight, late blight. Watch for aphids. Avoid overhead watering.' },
+  'roma tomato': { sci: 'Solanum lycopersicum "Roma"', type: 'annual', days: 75, warnings: 'Tomato hornworms, blossom end rot, fusarium wilt. Determinate variety — fruits ripen roughly at once. Watch for cracking in heavy rain.' },
+  'cherry tomato': { sci: 'Solanum lycopersicum var. cerasiforme', type: 'annual', days: 65, warnings: 'Prolific spreader. Hornworms, aphids, splitting after rain. Will take over if not pruned. Indeterminate — harvest all season.' },
+  'beefsteak tomato': { sci: 'Solanum lycopersicum "Beefsteak"', type: 'annual', days: 85, warnings: 'Heavy fruits need staking or caging. Blossom end rot, cracking, hornworms. Needs consistent watering.' },
+  'pepper': { sci: 'Capsicum annuum', type: 'annual', days: 70, warnings: 'Aphids, pepper maggots, blossom drop in high heat. Needs warm soil to transplant. Sensitive to frost.' },
+  'bell pepper': { sci: 'Capsicum annuum (Group)', type: 'annual', days: 75, warnings: 'Aphids, pepper maggots, sunscald. Green peppers are just unripe — leave longer for red/yellow. Blossom drop above 90°F.' },
+  'jalapeno': { sci: 'Capsicum annuum "Jalapeño"', type: 'annual', days: 72, warnings: 'Aphids, hornworms, blossom end rot. Corking (white lines) is normal and indicates heat. Hotter in dry conditions.' },
+  'habanero': { sci: 'Capsicum chinense "Habanero"', type: 'annual', days: 100, warnings: 'Long season — start indoors early. Aphids, whiteflies. Extremely hot — wear gloves when harvesting. Needs heat to thrive.' },
+  'cucumber': { sci: 'Cucumis sativus', type: 'annual', days: 58, warnings: 'Cucumber beetles, powdery mildew, bacterial wilt. Needs consistent water — bitter fruit if stressed. Trellis for better airflow.' },
+  'zucchini': { sci: 'Cucurbita pepo', type: 'annual', days: 50, warnings: 'Squash vine borers, powdery mildew, squash bugs. Harvest small — they grow fast. One plant produces a LOT. Hand pollinate if needed.' },
+  'squash': { sci: 'Cucurbita spp.', type: 'annual', days: 55, warnings: 'Squash vine borers (check base of stems), powdery mildew, squash bugs. Needs pollinators. Harvest summer squash young.' },
+  'butternut squash': { sci: 'Cucurbita moschata', type: 'annual', days: 110, warnings: 'Squash vine borers, powdery mildew. Long season — needs space to sprawl. Cure in sun after harvest for storage.' },
+  'pumpkin': { sci: 'Cucurbita maxima', type: 'annual', days: 100, warnings: 'Squash vine borers, powdery mildew, squash bugs. Needs lots of space and water. Slip cardboard under fruit to prevent rot.' },
+  'lettuce': { sci: 'Lactuca sativa', type: 'annual', days: 45, warnings: 'Bolts in heat — plant in cool weather. Aphids, slugs, rabbits. Shallow roots — water frequently. Harvest outer leaves for cut-and-come-again.' },
+  'spinach': { sci: 'Spinacia oleracea', type: 'annual', days: 40, warnings: 'Bolts fast in heat — cool season crop. Leaf miners, downy mildew. Plant early spring or fall. Shade cloth helps extend season.' },
+  'kale': { sci: 'Brassica oleracea var. sabellica', type: 'annual', days: 55, warnings: 'Cabbage worms, aphids, flea beetles. Actually sweeter after frost. Can overwinter in mild climates. Harvest outer leaves.' },
+  'carrot': { sci: 'Daucus carota subsp. sativus', type: 'biennial', days: 70, warnings: 'Carrot rust fly, forked roots in rocky soil. Needs loose deep soil. Thin seedlings or they compete. Slow to germinate — be patient.' },
+  'radish': { sci: 'Raphanus sativus', type: 'annual', days: 25, warnings: 'Flea beetles, root maggots. Fastest vegetable — great for impatient gardeners. Goes pithy if left too long. Cool weather crop.' },
+  'green bean': { sci: 'Phaseolus vulgaris', type: 'annual', days: 55, warnings: 'Mexican bean beetle, aphids, rust. Direct sow after last frost. Do not overwater. Bush types need no trellis.' },
+  'pea': { sci: 'Pisum sativum', type: 'annual', days: 60, warnings: 'Powdery mildew, aphids, root rot. Cool season — plant as early as soil can be worked. Needs trellis. Stop producing in heat.' },
+  'corn': { sci: 'Zea mays', type: 'annual', days: 80, warnings: 'Corn earworm, raccoons, wind damage. Plant in blocks not rows for pollination. Heavy feeder — needs nitrogen. Needs lots of space.' },
+  'potato': { sci: 'Solanum tuberosum', type: 'annual', days: 90, warnings: 'Colorado potato beetle, late blight, scab. Do NOT eat green parts — toxic. Hill soil around stems as they grow. Cure after harvest.' },
+  'sweet potato': { sci: 'Ipomoea batatas', type: 'annual', days: 100, warnings: 'Sweet potato weevil, whiteflies. Needs long warm season. Plant slips not seeds. Cure at 80-85°F for storage.' },
+  'onion': { sci: 'Allium cepa', type: 'biennial', days: 100, warnings: 'Onion maggots, thrips, neck rot. Day-length sensitive — pick correct type for your latitude. Stop watering when tops fall over.' },
+  'garlic': { sci: 'Allium sativum', type: 'annual', days: 240, warnings: 'Plant in fall for summer harvest. White rot, rust, nematodes. Needs cold period. Stop watering 2 weeks before harvest. Cure 2-4 weeks.' },
+  'basil': { sci: 'Ocimum basilicum', type: 'annual', days: 28, warnings: 'Fusarium wilt, aphids, Japanese beetles. Pinch flowers to keep producing leaves. Cold sensitive — dies at first frost.' },
+  'cilantro': { sci: 'Coriandrum sativum', type: 'annual', days: 30, warnings: 'Bolts extremely fast in heat. Succession plant every 2-3 weeks. Let some bolt for coriander seeds. Aphids.' },
+  'mint': { sci: 'Mentha spp.', type: 'perennial', days: 30, warnings: 'INVASIVE. Plant in containers or it will take over your entire garden. Rust, spider mites. Spreads by runners aggressively.' },
+  'rosemary': { sci: 'Salvia rosmarinus', type: 'perennial', days: 90, warnings: 'Root rot from overwatering — needs excellent drainage. Spider mites, powdery mildew. Hardy once established. Does not like wet feet.' },
+  'thyme': { sci: 'Thymus vulgaris', type: 'perennial', days: 70, warnings: 'Root rot in wet soil. Needs good drainage and full sun. Very drought tolerant once established. Prune after flowering.' },
+  'oregano': { sci: 'Origanum vulgare', type: 'perennial', days: 45, warnings: 'Aphids, spider mites. Can become woody — prune regularly. Spreads moderately. More flavorful when slightly drought stressed.' },
+  'parsley': { sci: 'Petroselinum crispum', type: 'biennial', days: 75, warnings: 'Swallowtail butterfly caterpillars (leave them — they become butterflies). Slow to germinate. Crown rot in wet conditions.' },
+  'sage': { sci: 'Salvia officinalis', type: 'perennial', days: 75, warnings: 'Root rot, powdery mildew, slugs. Needs good drainage. Prune after flowering to prevent woodiness. Replace every 3-4 years.' },
+  'strawberry': { sci: 'Fragaria × ananassa', type: 'perennial', days: 60, warnings: 'Birds (use netting), slugs, gray mold, spider mites. Runners spread aggressively. Remove first-year flowers for stronger plants.' },
+  'blueberry': { sci: 'Vaccinium corymbosum', type: 'perennial', days: 365, warnings: 'Needs acidic soil pH 4.5-5.5. Birds (use netting). Mummy berry disease, spotted wing drosophila. Takes 2-3 years to produce well.' },
+  'raspberry': { sci: 'Rubus idaeus', type: 'perennial', days: 365, warnings: 'Japanese beetles, spotted wing drosophila, cane borers. Spreads aggressively by suckers. Prune spent canes after fruiting.' },
+  'watermelon': { sci: 'Citrullus lanatus', type: 'annual', days: 85, warnings: 'Fusarium wilt, aphids, cucumber beetles. Needs lots of space and heat. Thump test for ripeness — should sound hollow.' },
+  'cantaloupe': { sci: 'Cucumis melo', type: 'annual', days: 80, warnings: 'Cucumber beetles, powdery mildew, fusarium wilt. Slips from vine when ripe. Needs warm soil and full sun.' },
+  'eggplant': { sci: 'Solanum melongena', type: 'annual', days: 70, warnings: 'Flea beetles (worst pest), Colorado potato beetle, verticillium wilt. Needs heat — use black plastic mulch. Harvest before skin dulls.' },
+  'broccoli': { sci: 'Brassica oleracea var. italica', type: 'annual', days: 65, warnings: 'Cabbage worms, cabbage loopers, aphids. Cool season crop. Harvest main head before flowers open. Side shoots continue producing.' },
+  'cauliflower': { sci: 'Brassica oleracea var. botrytis', type: 'annual', days: 75, warnings: 'Same pests as broccoli. Fussier than broccoli — needs consistent temps. Blanch by tying leaves over head. Bolts in heat.' },
+  'cabbage': { sci: 'Brassica oleracea var. capitata', type: 'annual', days: 70, warnings: 'Cabbage worms, cabbage loopers, root maggots, slugs. Splitting in heavy rain. Cool season crop. Row covers help with pests.' },
+  'sunflower': { sci: 'Helianthus annuus', type: 'annual', days: 70, warnings: 'Birds, squirrels, aphids, rust. Tall varieties need staking in wind. Allelopathic — can inhibit nearby plants. Attracts pollinators.' },
+  'marigold': { sci: 'Tagetes spp.', type: 'annual', days: 50, warnings: 'Spider mites, slugs. Natural pest deterrent — plant near vegetables. Deadhead for continuous blooming. Easy and forgiving.' },
+  'lavender': { sci: 'Lavandula angustifolia', type: 'perennial', days: 90, warnings: 'Root rot from overwatering. Needs excellent drainage and full sun. Prune after flowering. Does not like humidity. Deer resistant.' },
+  'hot pepper': { sci: 'Capsicum spp.', type: 'annual', days: 80, warnings: 'Aphids, pepper maggots, blossom drop in extreme heat. Hotter in stressed/dry conditions. Wear gloves for superhots.' },
+  'okra': { sci: 'Abelmoschus esculentus', type: 'annual', days: 55, warnings: 'Aphids, corn earworm, root-knot nematodes. Loves heat — do not plant until soil is warm. Harvest young or pods get woody. Wears gloves — spines irritate skin.' },
+  'celery': { sci: 'Apium graveolens', type: 'biennial', days: 130, warnings: 'Very long growing season. Needs consistent moisture. Celery leaf miner, aphids. Blanch stems by mounding soil. Fussy plant.' },
+  'beet': { sci: 'Beta vulgaris', type: 'biennial', days: 55, warnings: 'Leaf miners, cercospora leaf spot. Both roots and greens edible. Needs boron — amend if deficient. Germinate faster if soaked overnight.' },
+  'turnip': { sci: 'Brassica rapa subsp. rapa', type: 'annual', days: 45, warnings: 'Flea beetles, root maggots, aphids. Fast growing cool season crop. Both roots and greens are edible. Goes woody if left too long.' },
+  'swiss chard': { sci: 'Beta vulgaris subsp. vulgaris', type: 'biennial', days: 55, warnings: 'Leaf miners, cercospora leaf spot, slugs. Heat tolerant — good summer green. Cut-and-come-again harvest. Beautiful stems.' },
+  'dill': { sci: 'Anethum graveolens', type: 'annual', days: 40, warnings: 'Swallowtail caterpillars (beneficial — leave them). Bolts in heat. Self-seeds prolifically. Plant near tomatoes as companion.' },
+  'chive': { sci: 'Allium schoenoprasum', type: 'perennial', days: 60, warnings: 'Nearly indestructible. Onion fly occasionally. Flowers attract pollinators. Can become invasive if flowers go to seed. Divide every few years.' },
+};
+
+// Normalize plant name for lookup
+function normalizeName(name) {
+  return name.toLowerCase().trim()
+    .replace(/s$/, '')  // remove trailing s
+    .replace(/['']/g, '');
+}
+
+// Find plant in database with fuzzy matching
+function lookupPlant(name) {
+  const normalized = normalizeName(name);
+  
+  // Exact match
+  if (PLANT_DATABASE[normalized]) return PLANT_DATABASE[normalized];
+  
+  // Check if any key is contained in the input
+  for (const [key, data] of Object.entries(PLANT_DATABASE)) {
+    if (normalized.includes(key) || key.includes(normalized)) {
+      return data;
+    }
+  }
+  
+  // Check individual words
+  const words = normalized.split(/\s+/);
+  for (const word of words) {
+    if (word.length < 3) continue;
+    for (const [key, data] of Object.entries(PLANT_DATABASE)) {
+      if (key.includes(word)) return data;
+    }
+  }
+  
+  return null;
+}
+
+// ══════════════════════════════════════════
+//  VIEW MANAGEMENT
+// ══════════════════════════════════════════
+
+function showView(viewId) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.getElementById(viewId).classList.add('active');
+  
+  document.getElementById('deckViewBtn').classList.toggle('active', viewId === 'deckView');
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2500);
+}
+
+// ══════════════════════════════════════════
+//  DECK VIEW RENDERING
+// ══════════════════════════════════════════
+
+function renderDeck() {
+  const grid = document.getElementById('deckGrid');
+  const empty = document.getElementById('deckEmpty');
+  const stats = document.getElementById('deckStats');
+  
+  if (deck.length === 0) {
+    grid.style.display = 'none';
+    empty.style.display = 'block';
+    stats.textContent = '0 plants in garden';
+    return;
+  }
+  
+  grid.style.display = 'grid';
+  empty.style.display = 'none';
+  
+  const annuals = deck.filter(p => p.type === 'annual').length;
+  const perennials = deck.filter(p => p.type === 'perennial').length;
+  stats.textContent = `${deck.length} plant${deck.length !== 1 ? 's' : ''} in garden` +
+    (annuals ? ` · ${annuals} annual${annuals !== 1 ? 's' : ''}` : '') +
+    (perennials ? ` · ${perennials} perennial${perennials !== 1 ? 's' : ''}` : '');
+  
+  grid.innerHTML = deck.map(plant => {
+    const harvestStr = plant.estHarvest ? formatDate(plant.estHarvest) : '';
+    return `
+    <div class="mini-card" onclick="viewCard('${plant.id}')">
+      ${plant.photo 
+        ? `<img class="mini-card-img" src="${plant.photo}" alt="${plant.name}">`
+        : `<div class="mini-card-img placeholder">🌱</div>`
+      }
+      <div class="mini-card-info">
+        <div class="mini-card-name">${plant.name}</div>
+        <div class="mini-card-sci">${plant.sciName || ''}</div>
+        ${harvestStr ? `<div class="mini-card-harvest">🗓 ${harvestStr}</div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════
+//  CARD DETAIL VIEW
+// ══════════════════════════════════════════
+
+function viewCard(id) {
+  const plant = deck.find(p => p.id === id);
+  if (!plant) return;
+  currentCardId = id;
+  
+  const typeBadge = plant.type
+    ? `<span class="card-type-badge badge-${plant.type}">${plant.type}</span>`
+    : '';
+  
+  const container = document.getElementById('cardDetailView');
+  container.innerHTML = `
+    <div class="mtg-card">
+      <div class="card-header">
+        <div class="card-name">${plant.name}</div>
+        ${plant.daysToHarvest ? `<div class="card-cost">${plant.daysToHarvest}d</div>` : ''}
+      </div>
+      
+      <div class="card-image-frame">
+        ${plant.photo 
+          ? `<img src="${plant.photo}" alt="${plant.name}">`
+          : `<div class="card-image-placeholder"><span>🌱</span>No photo</div>`
+        }
+      </div>
+      
+      <div class="card-type-line">
+        <span class="card-scientific">${plant.sciName || 'Unknown species'}</span>
+        ${typeBadge}
+      </div>
+      
+      <div class="card-rules">
+        <div class="card-dates">
+          <div class="card-date-item">
+            <span class="card-date-label">Planted</span>
+            <span class="card-date-value">${plant.datePlanted ? formatDate(plant.datePlanted) : '—'}</span>
+          </div>
+          <div class="card-date-item">
+            <span class="card-date-label">Est. Harvest</span>
+            <span class="card-date-value harvest">${plant.estHarvest ? formatDate(plant.estHarvest) : '—'}</span>
+          </div>
+        </div>
+        ${plant.notes ? `<div class="card-notes">${plant.notes}</div>` : ''}
+      </div>
+      
+      ${plant.warnings ? `
+      <div class="card-warnings">
+        <div class="card-warnings-title">Watch Out For These</div>
+        <div class="card-warnings-text">${plant.warnings}</div>
+      </div>` : ''}
+      
+      <div class="card-footer">
+        <span class="card-source">${plant.source || '—'}</span>
+        <span class="card-price">${plant.price || '—'}</span>
+      </div>
+    </div>
+    
+    <div class="card-actions">
+      <button class="card-action-btn" onclick="editCard('${id}')">Edit</button>
+      <button class="card-action-btn" onclick="showView('deckView')">Back</button>
+      <button class="card-action-btn delete-btn" onclick="deleteCard('${id}')">Delete</button>
+    </div>
+  `;
+  
+  showView('cardDetailView');
+}
+
+function editCard(id) {
+  const plant = deck.find(p => p.id === id);
+  if (!plant) return;
+  
+  editingId = id;
+  document.getElementById('plantName').value = plant.name || '';
+  document.getElementById('sciName').value = plant.sciName || '';
+  document.getElementById('plantType').value = plant.type || '';
+  document.getElementById('datePlanted').value = plant.datePlanted || '';
+  document.getElementById('estHarvest').value = plant.estHarvest || '';
+  document.getElementById('daysToHarvest').value = plant.daysToHarvest || '';
+  document.getElementById('plantNotes').value = plant.notes || '';
+  document.getElementById('plantWarnings').value = plant.warnings || '';
+  document.getElementById('plantSource').value = plant.source || '';
+  document.getElementById('plantPrice').value = plant.price || '';
+  currentPhoto = plant.photo || null;
+  
+  const uploadEl = document.getElementById('photoUpload');
+  const textEl = document.getElementById('photoUploadText');
+  if (currentPhoto) {
+    let img = uploadEl.querySelector('img');
+    if (!img) { img = document.createElement('img'); uploadEl.appendChild(img); }
+    img.src = currentPhoto;
+    textEl.style.display = 'none';
+  }
+  
+  document.getElementById('saveCardBtn').textContent = 'Update Card';
+  document.querySelector('.create-title').textContent = 'Edit Card';
+  showView('createView');
+}
+
+function deleteCard(id) {
+  if (!confirm('Remove this plant from your garden?')) return;
+  deck = deck.filter(p => p.id !== id);
+  saveDeck(deck);
+  renderDeck();
+  showView('deckView');
+  showToast('Plant removed');
+}
+
+// ══════════════════════════════════════════
+//  CREATE / SAVE
+// ══════════════════════════════════════════
+
+function resetForm() {
+  editingId = null;
+  currentPhoto = null;
+  document.getElementById('plantName').value = '';
+  document.getElementById('sciName').value = '';
+  document.getElementById('plantType').value = '';
+  document.getElementById('datePlanted').value = '';
+  document.getElementById('estHarvest').value = '';
+  document.getElementById('daysToHarvest').value = '';
+  document.getElementById('plantNotes').value = '';
+  document.getElementById('plantWarnings').value = '';
+  document.getElementById('plantSource').value = '';
+  document.getElementById('plantPrice').value = '';
+  
+  const uploadEl = document.getElementById('photoUpload');
+  const img = uploadEl.querySelector('img');
+  if (img) img.remove();
+  document.getElementById('photoUploadText').style.display = '';
+  
+  document.getElementById('saveCardBtn').textContent = 'Add to Garden';
+  document.querySelector('.create-title').textContent = 'Plant a New Card';
+  
+  // Remove auto-populated styles
+  document.querySelectorAll('.auto-populated').forEach(el => {
+    if (el.id !== 'estHarvest') el.classList.remove('auto-populated');
+  });
+}
+
+function saveCard() {
+  const name = document.getElementById('plantName').value.trim();
+  if (!name) {
+    showToast('Enter a plant name');
+    return;
+  }
+  
+  const plant = {
+    id: editingId || 'plant_' + Date.now(),
+    name: name,
+    sciName: document.getElementById('sciName').value.trim(),
+    type: document.getElementById('plantType').value,
+    datePlanted: document.getElementById('datePlanted').value,
+    estHarvest: document.getElementById('estHarvest').value,
+    daysToHarvest: document.getElementById('daysToHarvest').value,
+    notes: document.getElementById('plantNotes').value.trim(),
+    warnings: document.getElementById('plantWarnings').value.trim(),
+    source: document.getElementById('plantSource').value.trim(),
+    price: document.getElementById('plantPrice').value.trim(),
+    photo: currentPhoto,
+    createdAt: editingId ? (deck.find(p => p.id === editingId)?.createdAt || new Date().toISOString()) : new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  
+  if (editingId) {
+    const idx = deck.findIndex(p => p.id === editingId);
+    if (idx >= 0) deck[idx] = plant;
+  } else {
+    deck.push(plant);
+  }
+  
+  saveDeck(deck);
+  renderDeck();
+  resetForm();
+  showView('deckView');
+  showToast(editingId ? 'Card updated' : 'Plant added to garden');
+}
+
+// ══════════════════════════════════════════
+//  AUTO-POPULATE LOGIC
+// ══════════════════════════════════════════
+
+function doLookup() {
+  const name = document.getElementById('plantName').value.trim();
+  if (!name) {
+    showToast('Enter a plant name first');
+    return;
+  }
+  
+  const btn = document.getElementById('lookupBtn');
+  btn.classList.add('loading');
+  btn.disabled = true;
+  
+  // Simulate brief delay for UX
+  setTimeout(() => {
+    const data = lookupPlant(name);
+    
+    if (data) {
+      if (data.sci) {
+        document.getElementById('sciName').value = data.sci;
+        document.getElementById('sciName').classList.add('auto-populated');
+      }
+      if (data.type) {
+        document.getElementById('plantType').value = data.type;
+      }
+      if (data.days) {
+        document.getElementById('daysToHarvest').value = data.days;
+        document.getElementById('daysToHarvest').classList.add('auto-populated');
+        recalcHarvest();
+      }
+      if (data.warnings) {
+        document.getElementById('plantWarnings').value = data.warnings;
+        document.getElementById('plantWarnings').classList.add('auto-populated');
+      }
+      document.getElementById('lookupHint').textContent = '✓ Plant data found and populated';
+      document.getElementById('lookupHint').style.color = '#7ab556';
+      showToast(`Found: ${data.sci}`);
+    } else {
+      document.getElementById('lookupHint').textContent = 'Plant not found in database. You can enter details manually.';
+      document.getElementById('lookupHint').style.color = '#c45a4a';
+      showToast('Not found — enter manually');
+    }
+    
+    btn.classList.remove('loading');
+    btn.disabled = false;
+  }, 600);
+}
+
+function recalcHarvest() {
+  const datePlanted = document.getElementById('datePlanted').value;
+  const days = parseInt(document.getElementById('daysToHarvest').value);
+  
+  if (datePlanted && days) {
+    const planted = new Date(datePlanted);
+    planted.setDate(planted.getDate() + days);
+    document.getElementById('estHarvest').value = planted.toISOString().split('T')[0];
+  }
+}
+
+// ══════════════════════════════════════════
+//  PHOTO HANDLING
+// ══════════════════════════════════════════
+
+function handlePhoto(file) {
+  if (!file) return;
+  
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    // Resize for storage
+    const img = new Image();
+    img.onload = function() {
+      const canvas = document.createElement('canvas');
+      const maxSize = 600;
+      let w = img.width, h = img.height;
+      if (w > h) { if (w > maxSize) { h *= maxSize/w; w = maxSize; } }
+      else { if (h > maxSize) { w *= maxSize/h; h = maxSize; } }
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      currentPhoto = canvas.toDataURL('image/jpeg', 0.7);
+      
+      // Show preview
+      const uploadEl = document.getElementById('photoUpload');
+      let previewImg = uploadEl.querySelector('img');
+      if (!previewImg) { previewImg = document.createElement('img'); uploadEl.appendChild(previewImg); }
+      previewImg.src = currentPhoto;
+      document.getElementById('photoUploadText').style.display = 'none';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ══════════════════════════════════════════
+//  CSV EXPORT
+// ══════════════════════════════════════════
+
+function exportCSV() {
+  if (deck.length === 0) {
+    showToast('No plants to export');
+    return;
+  }
+  
+  const headers = ['Name', 'Scientific Name', 'Type', 'Date Planted', 'Est. Harvest', 'Days to Harvest', 'Notes', 'Warnings', 'Source', 'Price Paid', 'Created', 'Updated'];
+  const rows = deck.map(p => [
+    p.name, p.sciName, p.type, p.datePlanted, p.estHarvest,
+    p.daysToHarvest, `"${(p.notes||'').replace(/"/g, '""')}"`,
+    `"${(p.warnings||'').replace(/"/g, '""')}"`,
+    p.source, p.price, p.createdAt, p.updatedAt
+  ]);
+  
+  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `gardendeck_${new Date().toISOString().split('T')[0]}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV exported');
+}
+
+// ══════════════════════════════════════════
+//  UTILITIES
+// ══════════════════════════════════════════
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr + 'T00:00:00');
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+}
+
+function generateId() {
+  return 'plant_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
+}
+
+// ══════════════════════════════════════════
+//  EVENT BINDINGS
+// ══════════════════════════════════════════
+
+document.getElementById('addCardBtn').addEventListener('click', () => {
+  resetForm();
+  showView('createView');
+});
+
+document.getElementById('deckViewBtn').addEventListener('click', () => {
+  showView('deckView');
+});
+
+document.getElementById('lookupBtn').addEventListener('click', doLookup);
+
+document.getElementById('datePlanted').addEventListener('change', recalcHarvest);
+document.getElementById('daysToHarvest').addEventListener('input', recalcHarvest);
+
+document.getElementById('photoUpload').addEventListener('click', () => {
+  document.getElementById('photoInput').click();
+});
+
+document.getElementById('photoInput').addEventListener('change', (e) => {
+  handlePhoto(e.target.files[0]);
+});
+
+document.getElementById('saveCardBtn').addEventListener('click', saveCard);
+
+document.getElementById('cancelBtn').addEventListener('click', () => {
+  resetForm();
+  showView('deckView');
+});
+
+document.getElementById('exportBtn').addEventListener('click', exportCSV);
+
+// Also allow Enter in plant name to trigger lookup
+document.getElementById('plantName').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    doLookup();
+  }
+});
+
+// ══════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════
+
+renderDeck();
+</script>
+</body>
+</html>
