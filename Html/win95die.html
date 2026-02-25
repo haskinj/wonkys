@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Windows 95 Die · 9 Things</title>
+    <style>
+        /* ---------- 90s NEON GEOMETRIC WALLPAPER ---------- */
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background-color: black;
+            background-image: 
+                linear-gradient(45deg, #ff00ff 1px, transparent 1px),
+                linear-gradient(-45deg, #00ffff 1px, transparent 1px),
+                linear-gradient(135deg, #ffff00 1px, transparent 1px),
+                linear-gradient(225deg, #00ff00 1px, transparent 1px);
+            background-size: 60px 60px;
+            background-position: 0 0, 0 0, 30px 30px, 30px 30px;
+            font-family: 'MS Sans Serif', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        /* ---------- WINDOWS 95 STYLE WINDOW ---------- */
+        .win95-window {
+            position: absolute;
+            top: 50px;
+            left: 100px;
+            width: 400px;
+            background: #c0c0c0;
+            border: 3px solid;
+            border-color: #dfdfdf #404040 #404040 #dfdfdf;
+            box-shadow: 2px 2px 0 rgba(0,0,0,0.5);
+            font-size: 14px;
+        }
+
+        /* Title bar */
+        .title-bar {
+            background: #000080;
+            color: white;
+            padding: 5px 5px 4px 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            letter-spacing: 0.5px;
+        }
+        .title-bar .title {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .title-bar .title img {
+            width: 16px;
+            height: 16px;
+            filter: invert(1); /* make the icon white */
+        }
+        .title-bar .buttons {
+            display: flex;
+            gap: 2px;
+        }
+        .title-bar .btn {
+            width: 22px;
+            height: 22px;
+            background: #c0c0c0;
+            border: 2px solid;
+            border-color: #ffffff #808080 #808080 #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight bold;
+            color: black;
+            cursor: default;
+            box-sizing: border-box;
+        }
+        .title-bar .btn:active {
+            border-color: #808080 #ffffff #ffffff #808080;
+        }
+
+        /* Window content area */
+        .window-content {
+            padding: 20px;
+            background: #c0c0c0;
+            border: 2px solid;
+            border-color: #ffffff #808080 #808080 #ffffff;
+            margin: 2px;
+            text-align: center;
+        }
+
+        /* Text and buttons inside */
+        .window-content p {
+            margin: 10px 0;
+            font-size: 15px;
+        }
+        .die-placeholder {
+            font-size: 64px;
+            line-height: 1;
+            margin: 15px 0;
+            filter: drop-shadow(2px 2px 0 #808080);
+        }
+        .counter {
+            background: #e0e0e0;
+            border: 2px inset #ffffff;
+            padding: 8px;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        .win95-button {
+            background: #c0c0c0;
+            border: 3px solid;
+            border-color: #ffffff #808080 #808080 #ffffff;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin: 5px;
+            outline: none;
+        }
+        .win95-button:active {
+            border-color: #808080 #ffffff #ffffff #808080;
+        }
+
+        /* ---------- THE POPUP (DIE WINDOW) ---------- */
+        .popup {
+            position: absolute;
+            top: 150px;
+            left: 250px;
+            width: 280px;
+            background: #c0c0c0;
+            border: 3px solid;
+            border-color: #ffffff #404040 #404040 #ffffff;
+            box-shadow: 3px 3px 0 rgba(0,0,0,0.5);
+            display: none; /* hidden by default */
+            z-index: 10;
+        }
+        .popup .title-bar {
+            background: #000080;
+            color: white;
+            padding: 4px 5px 3px 8px;
+            font-size: 13px;
+        }
+        .popup-content {
+            padding: 20px;
+            text-align: center;
+            background: #c0c0c0;
+            border: 2px solid;
+            border-color: #ffffff #808080 #808080 #ffffff;
+            margin: 2px;
+        }
+        .popup .die-result {
+            font-size: 48px;
+            margin: 10px 0;
+        }
+        .popup .phrase {
+            font-size: 24px;
+            font-weight: bold;
+            background: #e0e0e0;
+            border: 2px inset #ffffff;
+            padding: 10px;
+            margin: 10px 0;
+        }
+        .popup-close {
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- MAIN WINDOW (Windows 95 style) -->
+    <div class="win95-window" id="mainWindow">
+        <div class="title-bar">
+            <div class="title">
+                <img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAVklEQVR42mNkoBAwUjifgQrgyJEjjKQY8P//f0ZHR0cGf39/Bj8/PwYPDw8GGxsbBisrKwZzc3MGR0dHBjMzMwYjIyMGRUVFBgUFBQY5OTkGaWlpBklJSQYAcXMRHh3T7JgAAAAASUVORK5CYII=" alt="icon">
+                Die · 9 Things
+            </div>
+            <div class="buttons">
+                <span class="btn" onclick="alert('Minimize? This is 95, just click the X')">_</span>
+                <span class="btn" onclick="alert('Windows 95 never dies')">□</span>
+                <span class="btn" onclick="document.getElementById('mainWindow').style.display='none'">×</span>
+            </div>
+        </div>
+        <div class="window-content" ondblclick="openPopup()">
+            <p><strong>Double‑click anywhere to roll the die</strong></p>
+            <div class="die-placeholder" id="mainDie">🎲</div>
+            <div class="counter" id="counterDisplay">Rolls left: 9</div>
+            <button class="win95-button" onclick="resetCounter()">Reset rolls</button>
+            <p style="font-size:12px; margin-top:15px;">(up to 9 rolls, then it stops)</p>
+        </div>
+    </div>
+
+    <!-- POPUP (the little box that shows the die result) -->
+    <div class="popup" id="diePopup">
+        <div class="title-bar">
+            <span>🎲 Die says...</span>
+            <div class="buttons">
+                <span class="btn" onclick="closePopup()">×</span>
+            </div>
+        </div>
+        <div class="popup-content">
+            <div class="die-result" id="popupDie">🎲</div>
+            <div class="phrase" id="popupPhrase">Click to roll</div>
+            <button class="win95-button popup-close" onclick="closePopup()">Close</button>
+        </div>
+    </div>
+
+    <script>
+        // ----- 9 THINGS (the die faces) -----
+        const phrases = [
+            "Not Now",
+            "Whoops?",
+            "I Forgot",
+            "Yeah, sure.",
+            "Who?",
+            "Hmm",
+            "Later",
+            "OK",
+            "No way"
+        ];
+
+        // ----- State -----
+        let rollsLeft = 9;          // start with 9
+        const maxRolls = 9;
+
+        // DOM elements
+        const mainWindow = document.getElementById('mainWindow');
+        const popup = document.getElementById('diePopup');
+        const popupPhrase = document.getElementById('popupPhrase');
+        const popupDie = document.getElementById('popupDie');
+        const counterDisplay = document.getElementById('counterDisplay');
+
+        // Helper to update the counter in main window
+        function updateCounter() {
+            counterDisplay.innerText = `Rolls left: ${rollsLeft}`;
+        }
+
+        // Reset counter to 9
+        window.resetCounter = function() {
+            rollsLeft = maxRolls;
+            updateCounter();
+        };
+
+        // Close popup
+        window.closePopup = function() {
+            popup.style.display = 'none';
+        };
+
+        // Open popup (called on double‑click)
+        window.openPopup = function() {
+            // If no rolls left, show a different message
+            if (rollsLeft <= 0) {
+                alert("No rolls left! Click 'Reset rolls' to start again.");
+                return;
+            }
+
+            // Choose a random phrase
+            const randomIndex = Math.floor(Math.random() * phrases.length);
+            const chosenPhrase = phrases[randomIndex];
+
+            // Update popup content
+            popupPhrase.innerText = chosenPhrase;
+            // Change die face based on number of rolls left (just for fun)
+            const dieFaces = ['⚀', '⚁', '⚂', '⚃', '⚄', '⚅'];
+            // use rolls left to pick a die, but we have 9 so we'll cycle
+            const dieIndex = (maxRolls - rollsLeft) % 6;
+            popupDie.innerText = dieFaces[dieIndex] || '🎲';
+
+            // Decrement rolls left
+            rollsLeft--;
+            updateCounter();
+
+            // Position popup near the main window (centered relative to it)
+            const mainRect = mainWindow.getBoundingClientRect();
+            popup.style.left = (mainRect.left + 60) + 'px';
+            popup.style.top = (mainRect.top + 80) + 'px';
+            popup.style.display = 'block';
+        };
+
+        // Also allow double‑click on the die placeholder itself
+        document.getElementById('mainDie').addEventListener('dblclick', function(e) {
+            e.stopPropagation();
+            openPopup();
+        });
+
+        // If user clicks outside the popup, we don't auto‑close (that's not Windows 95 style)
+        // But clicking the close button works.
+
+        // Prevent double‑click on the main window from opening multiple popups
+        // (openPopup already checks rollsLeft)
+
+        // Initial counter display
+        updateCounter();
+
+        // Bonus: make the main window draggable (optional but fun)
+        // Simple drag using mousedown on title bar
+        let offsetX, offsetY, mouseX, mouseY, isDragging = false;
+        const titleBar = document.querySelector('.win95-window .title-bar');
+
+        titleBar.addEventListener('mousedown', function(e) {
+            isDragging = true;
+            offsetX = e.clientX - mainWindow.offsetLeft;
+            offsetY = e.clientY - mainWindow.offsetTop;
+            mainWindow.style.cursor = 'move';
+        });
+
+        window.addEventListener('mousemove', function(e) {
+            if (isDragging) {
+                e.preventDefault();
+                mainWindow.style.left = (e.clientX - offsetX) + 'px';
+                mainWindow.style.top = (e.clientY - offsetY) + 'px';
+            }
+        });
+
+        window.addEventListener('mouseup', function() {
+            isDragging = false;
+            mainWindow.style.cursor = 'default';
+        });
+    </script>
+</body>
+</html>
